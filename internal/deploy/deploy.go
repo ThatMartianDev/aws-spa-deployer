@@ -33,7 +33,7 @@ func Run(logger *logrus.Logger, ctx context.Context, cfg config.Config) error {
 	s3Client := sdkS3.NewFromConfig(awsCfg)
 
 	for {
-		if err := s3.EnsureBucket(logger, ctx, s3Client, cfg.Bucket); err != nil {
+		if err := s3.EnsureBucket(logger, ctx, s3Client, cfg.Bucket, cfg.Region); err != nil {
 			logger.Warnf("Bucket creation failed: %v", err)
 			cfg.Bucket = s3.PromptBucketName(logger, cfg.Bucket)
 			continue

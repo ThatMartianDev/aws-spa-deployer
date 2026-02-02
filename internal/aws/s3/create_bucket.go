@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func EnsureBucket(logger *logrus.Logger, ctx context.Context, client *s3.Client, bucket string) error {
+func EnsureBucket(logger *logrus.Logger, ctx context.Context, client *s3.Client, bucket string, region string) error {
 	for {
 		_, err := client.HeadBucket(ctx, &s3.HeadBucketInput{
 			Bucket: &bucket,
@@ -47,9 +47,17 @@ func EnsureBucket(logger *logrus.Logger, ctx context.Context, client *s3.Client,
 		}
 
 		// Bucket does not exist or not accessible → try to create
-		_, err = client.CreateBucket(ctx, &s3.CreateBucketInput{
+		region := region
+		createBucketInput := &s3.CreateBucketInput{
 			Bucket: &bucket,
-		})
+		}
+		if region != "us-east-1" {
+			createBucketInput.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+				LocationConstraint: types.BucketLocationConstraint(region),
+			}
+		}
+
+		_, err = client.CreateBucket(ctx, createBucketInput)
 
 		if err != nil {
 			logger.Errorf("Failed to create bucket %s: %v", bucket, err)
